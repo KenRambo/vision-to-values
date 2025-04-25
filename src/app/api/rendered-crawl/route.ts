@@ -7,7 +7,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 async function extractVisibleTextFromPage(url: string): Promise<string> {
   const isVercel = !!process.env.AWS_EXECUTION_ENV;
 
-  let launchOptions: any = { headless: true };
+  let launchOptions;
 
   if (isVercel) {
     const { default: chromium } = await import("@sparticuz/chromium");
@@ -16,13 +16,12 @@ async function extractVisibleTextFromPage(url: string): Promise<string> {
       executablePath: await chromium.executablePath(),
       headless: true,
     };
+  } else {
+    launchOptions = { headless: true };
   }
 
   const browser = await playwrightChromium.launch(launchOptions);
-  const context = await browser.newContext({
-    userAgent:
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-  });
+  const context = await browser.newContext();
 
   const page = await context.newPage();
 
@@ -54,7 +53,7 @@ async function extractVisibleTextFromPage(url: string): Promise<string> {
     await browser.close();
     return text.slice(0, 8000);
   } catch (err) {
-    console.error("⚠️ Failed to load or extract from page:", err);
+    console.error("❌ Playwright crawl error:", err);
     await browser.close();
     return "";
   }
@@ -81,7 +80,7 @@ export async function POST(req: NextRequest) {
     }
 
     const siteText = await extractVisibleTextFromPage(url);
-    console.log("📄 Crawled content (truncated):\n", siteText.slice(0, 500));
+    console.log("📄 Crawled content:\n", siteText.slice(0, 500));
 
     if (!siteText || siteText.length < 100) {
       return NextResponse.json({
