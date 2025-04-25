@@ -17,7 +17,6 @@ export default function VisionToValuesForm() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sectionData, setSectionData] = useState<{ [key: string]: any }>({});
   const [lastUpdatedByAI, setLastUpdatedByAI] = useState<string | null>(null);
-  const [crawlProgress, setCrawlProgress] = useState(0);
 
   const [messages, setMessages] = useState([
     {
@@ -30,7 +29,6 @@ export default function VisionToValuesForm() {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const [websiteUrl, setWebsiteUrl] = useState("");
-  const [generatingFromUrl, setGeneratingFromUrl] = useState(false);
   const [showWebsitePanel, setShowWebsitePanel] = useState(true);
 
   const currentSection = sections[currentIndex];
@@ -45,9 +43,13 @@ export default function VisionToValuesForm() {
     return input;
   };
 
+  const [generatingFromUrl, setGeneratingFromUrl] = useState(false);
+  const [crawlProgress, setCrawlProgress] = useState(0);
+
   const generateFromWebsite = async (rawUrl: string) => {
     const url = normalizeUrl(rawUrl.trim());
     if (!url) return;
+
     setGeneratingFromUrl(true);
     setCrawlProgress(0);
 
@@ -65,6 +67,7 @@ export default function VisionToValuesForm() {
     });
 
     const result = await res.json();
+
     clearInterval(progressInterval);
     setCrawlProgress(100);
 
@@ -86,7 +89,7 @@ export default function VisionToValuesForm() {
         {
           role: "assistant",
           content:
-            "I've refreshed your Vision to Values draft. Only empty or TBD sections were replaced.",
+            "✅ Draft updated! Only 'TBD' sections were replaced from the site.",
         },
       ]);
     }
@@ -150,9 +153,9 @@ export default function VisionToValuesForm() {
       </header>
 
       {generatingFromUrl && (
-        <div className="relative mb-4 h-2 w-full bg-gray-200 rounded overflow-hidden">
+        <div className="relative mt-2 h-2 w-full bg-gray-200 rounded overflow-hidden">
           <div
-            className="absolute top-0 left-0 h-full bg-indigo-600 transition-all duration-150 ease-out"
+            className="h-full bg-indigo-600 transition-all duration-150 ease-out"
             style={{ width: `${crawlProgress}%` }}
           />
         </div>
