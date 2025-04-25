@@ -10,7 +10,7 @@ async function extractVisibleTextFromPage(url: string): Promise<string> {
   let launchOptions: any = { headless: true };
 
   if (isVercel) {
-    const chromium = await import("@sparticuz/chromium");
+    const { default: chromium } = await import("@sparticuz/chromium");
     launchOptions = {
       args: chromium.args,
       executablePath: await chromium.executablePath(),
