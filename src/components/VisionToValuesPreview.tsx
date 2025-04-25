@@ -10,8 +10,6 @@ const SECTION_ICONS: Record<string, string> = {
   values: "🌟",
 };
 
-const bulletSectionKeys = ["values", "priorities", "objectives"];
-
 export default function VisionToValuesPreview({
   data,
   onUpdate,
