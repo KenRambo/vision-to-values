@@ -142,7 +142,7 @@ export default function VisionToValuesForm() {
     <div className="flex flex-col gap-8 max-w-4xl mx-auto px-6 py-10 font-sans">
       <header>
         <h1 className="text-4xl font-bold text-gray-900 mb-1">
-          Vision to Values Builder
+          Vision to Values Generator (Beta)
         </h1>
         <p className="text-gray-600">
           Generate or refine any section — GPT will guide you.
