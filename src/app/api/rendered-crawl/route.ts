@@ -1,26 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
-import { chromium } from "playwright";
+import chromium from "@sparticuz/chromium";
+import { chromium as playwrightChromium } from "playwright-core";
 import { OpenAI } from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 async function extractVisibleTextFromPage(url: string): Promise<string> {
-  const browser = await chromium.launch();
+  const browser = await playwrightChromium.launch({
+    args: chromium.args,
+    executablePath: await chromium.executablePath(),
+    headless: chromium.headless,
+  });
+
   const context = await browser.newContext({
     userAgent:
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
   });
+
   const page = await context.newPage();
+
   try {
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 });
-    await page.waitForLoadState("load"); // waits for full load event
-    await page.waitForTimeout(2000); // JS init buffer
+    await page.waitForLoadState("load");
+    await page.waitForTimeout(2000);
     await page.waitForSelector("h1, p, main, body", { timeout: 5000 });
 
-    // Simulate scroll to load lazy content
     await page.evaluate(() => {
       window.scrollBy(0, window.innerHeight);
     });
+
     await page.waitForTimeout(1000);
 
     const text = await page.evaluate(() => {
@@ -43,8 +51,8 @@ async function extractVisibleTextFromPage(url: string): Promise<string> {
     await browser.close();
     return text.slice(0, 8000);
   } catch (err) {
-    await browser.close();
     console.error("⚠️ Failed to load or extract from page:", err);
+    await browser.close();
     return "";
   }
 }
@@ -53,8 +61,7 @@ function tryParseJsonSections(text: string) {
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return parsed;
+      return JSON.parse(jsonMatch[0]);
     }
   } catch (err) {
     console.warn("⚠️ Failed to parse GPT response as JSON:", err);
@@ -65,6 +72,7 @@ function tryParseJsonSections(text: string) {
 export async function POST(req: NextRequest) {
   try {
     const { url } = await req.json();
+
     if (!/^https?:\/\/.+\..+/.test(url)) {
       return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
     }
