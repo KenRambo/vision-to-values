@@ -168,7 +168,7 @@ export default function VisionToValuesForm() {
                   }
                 }}
                 placeholder="e.g. patrickhillstrom.com"
-                className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm"
+                className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm text-gray-900 placeholder-gray-400"
               />
               {websiteUrl && !generatingFromUrl && (
                 <button
