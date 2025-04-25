@@ -17,6 +17,7 @@ export default function VisionToValuesForm() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sectionData, setSectionData] = useState<{ [key: string]: any }>({});
   const [lastUpdatedByAI, setLastUpdatedByAI] = useState<string | null>(null);
+  const [crawlProgress, setCrawlProgress] = useState(0);
 
   const [messages, setMessages] = useState([
     {
@@ -48,6 +49,14 @@ export default function VisionToValuesForm() {
     const url = normalizeUrl(rawUrl.trim());
     if (!url) return;
     setGeneratingFromUrl(true);
+    setCrawlProgress(0);
+
+    const progressInterval = setInterval(() => {
+      setCrawlProgress((prev) => {
+        if (prev >= 95) return prev;
+        return prev + 5;
+      });
+    }, 150);
 
     const res = await fetch("/api/rendered-crawl", {
       method: "POST",
@@ -56,7 +65,13 @@ export default function VisionToValuesForm() {
     });
 
     const result = await res.json();
-    setGeneratingFromUrl(false);
+    clearInterval(progressInterval);
+    setCrawlProgress(100);
+
+    setTimeout(() => {
+      setGeneratingFromUrl(false);
+      setCrawlProgress(0);
+    }, 600);
 
     if (result.sections) {
       const updates: { [key: string]: any } = {};
@@ -136,7 +151,10 @@ export default function VisionToValuesForm() {
 
       {generatingFromUrl && (
         <div className="relative mb-4 h-2 w-full bg-gray-200 rounded overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 animate-pulse rounded" />
+          <div
+            className="absolute top-0 left-0 h-full bg-indigo-600 transition-all duration-150 ease-out"
+            style={{ width: `${crawlProgress}%` }}
+          />
         </div>
       )}
 
@@ -178,7 +196,6 @@ export default function VisionToValuesForm() {
                   🔄 Recrawl this site and regenerate (TBD only)
                 </button>
               )}
-
               <button
                 onClick={() => generateFromWebsite(websiteUrl)}
                 className="bg-indigo-600 text-white px-4 py-2 text-sm rounded hover:bg-indigo-700 transition"

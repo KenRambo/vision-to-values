@@ -1,16 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import chromium from "@sparticuz/chromium";
-import { chromium as playwrightChromium } from "playwright-core";
 import { OpenAI } from "openai";
+import { chromium as playwrightChromium } from "playwright-core";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 async function extractVisibleTextFromPage(url: string): Promise<string> {
-  const browser = await playwrightChromium.launch({
-    args: chromium.args,
-    executablePath: await chromium.executablePath(),
-    headless: true, // ✅ force it to be a boolean
-  });
+  const isVercel = !!process.env.AWS_EXECUTION_ENV;
+
+  const chromium = isVercel ? await import("@sparticuz/chromium") : null;
+
+  const browser = await playwrightChromium.launch(
+    isVercel
+      ? {
+          args: chromium.args,
+          executablePath: await chromium.executablePath(),
+          headless: true,
+        }
+      : {
+          headless: true,
+        },
+  );
 
   const context = await browser.newContext({
     userAgent:
@@ -24,15 +33,11 @@ async function extractVisibleTextFromPage(url: string): Promise<string> {
     await page.waitForLoadState("load");
     await page.waitForTimeout(2000);
     await page.waitForSelector("h1, p, main, body", { timeout: 5000 });
-
-    await page.evaluate(() => {
-      window.scrollBy(0, window.innerHeight);
-    });
-
+    await page.evaluate(() => window.scrollBy(0, window.innerHeight));
     await page.waitForTimeout(1000);
 
     const text = await page.evaluate(() => {
-      const getVisibleText = (el: Element) => {
+      const isVisible = (el: Element) => {
         const style = window.getComputedStyle(el as HTMLElement);
         return (
           style.display !== "none" &&
@@ -42,7 +47,7 @@ async function extractVisibleTextFromPage(url: string): Promise<string> {
       };
 
       return Array.from(document.querySelectorAll("h1, h2, h3, p, li"))
-        .filter((el) => getVisibleText(el))
+        .filter((el) => isVisible(el))
         .map((el) => el.textContent?.trim())
         .filter((t) => t && t.length > 20)
         .join("\n\n");
