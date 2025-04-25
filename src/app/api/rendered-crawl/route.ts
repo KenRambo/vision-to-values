@@ -9,7 +9,7 @@ async function extractVisibleTextFromPage(url: string): Promise<string> {
   const browser = await playwrightChromium.launch({
     args: chromium.args,
     executablePath: await chromium.executablePath(),
-    headless: chromium.headless,
+    headless: true, // ✅ force it to be a boolean
   });
 
   const context = await browser.newContext({
