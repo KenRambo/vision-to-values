@@ -1,26 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { OpenAI } from "openai";
 import { chromium as playwrightChromium } from "playwright-core";
+import { OpenAI } from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 async function extractVisibleTextFromPage(url: string): Promise<string> {
   const isVercel = !!process.env.AWS_EXECUTION_ENV;
 
-  const chromium = isVercel ? await import("@sparticuz/chromium") : null;
+  let launchOptions: any = { headless: true };
 
-  const browser = await playwrightChromium.launch(
-    isVercel
-      ? {
-          args: chromium.args,
-          executablePath: await chromium.executablePath(),
-          headless: true,
-        }
-      : {
-          headless: true,
-        },
-  );
+  if (isVercel) {
+    const chromium = await import("@sparticuz/chromium");
+    launchOptions = {
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+      headless: true,
+    };
+  }
 
+  const browser = await playwrightChromium.launch(launchOptions);
   const context = await browser.newContext({
     userAgent:
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
