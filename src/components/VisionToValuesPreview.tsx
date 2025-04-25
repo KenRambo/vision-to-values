@@ -91,14 +91,14 @@ export default function VisionToValuesPreview({
             ) : (
               <div
                 className="cursor-pointer group space-y-2"
-                onClick={() =>
-                  setEditingKey(key) &&
+                onClick={() => {
+                  setEditingKey(key);
                   setEditingText(
                     typeof raw === "string"
                       ? raw
                       : JSON.stringify(raw, null, 2),
-                  )
-                }
+                  );
+                }}
               >
                 {isArray ? (
                   <ul className="list-disc pl-5 space-y-2">
