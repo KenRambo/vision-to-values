@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "vercel-build": "npx playwright install chromium && next build"
+    "vercel-build": "next build"
   },
   "dependencies": {
     "@playwright/test": "^1.52.0",
